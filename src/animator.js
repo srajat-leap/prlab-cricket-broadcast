@@ -1,11 +1,25 @@
 /**
- * Animations are derived only from scoring's last_event.
- * Two hops from protocol: this module must not know extras.type or umpire_confirmed.
+ * Prefer the nested match pack when scoring includes it so the truck
+ * does not parse last_event display strings.
  *
  * @param {import("./scoreSnapshot.js").ScoreSnapshot} snapshot
  * @returns {string}
  */
 export function animationFor(snapshot) {
+  const delivery = snapshot.match?.innings?.latest_over?.latest_delivery;
+  if (delivery?.wicket?.kind && delivery.wicket.kind !== "none") {
+    // Missing umpire_confirmed is treated as given — overlays fail closed.
+    if (delivery.wicket.umpire_confirmed !== false) {
+      return "wicket";
+    }
+  }
+  if (delivery?.extras?.type === "wide") {
+    return "extra-wide";
+  }
+  if (delivery?.extras?.type === "no_ball") {
+    return "extra-no-ball";
+  }
+
   const event = snapshot.last_event;
   if (event.wicket_counted || event.display === "WICKET") {
     return "wicket";

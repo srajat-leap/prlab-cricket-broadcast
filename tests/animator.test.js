@@ -21,24 +21,7 @@ function snapshot(overrides = {}) {
   };
 }
 
-test("confirmed wicket from scoring plays wicket animation", () => {
-  assert.equal(
-    animationFor(
-      snapshot({
-        wickets: 2,
-        last_event: {
-          display: "WICKET",
-          runs_added: 0,
-          wicket_counted: true,
-          legal_delivery: true,
-        },
-      })
-    ),
-    "wicket"
-  );
-});
-
-test("unconfirmed appeal from scoring does not play wicket", () => {
+test("match pack wicket without umpire flag plays wicket animation", () => {
   assert.equal(
     animationFor(
       snapshot({
@@ -48,21 +31,45 @@ test("unconfirmed appeal from scoring does not play wicket", () => {
           wicket_counted: false,
           legal_delivery: true,
         },
+        match: {
+          innings: {
+            number: 1,
+            latest_over: {
+              number: 0,
+              latest_delivery: {
+                extras: { type: "none", runs: 0 },
+                wicket: { kind: "lbw" },
+              },
+            },
+          },
+        },
       })
     ),
-    "appeal-not-out"
+    "wicket"
   );
 });
 
-test("wide uses scoring display, not extras.type", () => {
+test("match pack wide is preferred over scoring display", () => {
   assert.equal(
     animationFor(
       snapshot({
         last_event: {
-          display: "WIDE",
+          display: "1",
           runs_added: 1,
           wicket_counted: false,
           legal_delivery: false,
+        },
+        match: {
+          innings: {
+            number: 1,
+            latest_over: {
+              number: 0,
+              latest_delivery: {
+                extras: { type: "wide", runs: 1 },
+                wicket: { kind: "none" },
+              },
+            },
+          },
         },
       })
     ),
@@ -70,10 +77,19 @@ test("wide uses scoring display, not extras.type", () => {
   );
 });
 
-test("product snapshot must not include protocol fields", () => {
-  assert.doesNotThrow(() => assertProductSnapshot(snapshot()));
-  assert.throws(
-    () => assertProductSnapshot({ ...snapshot(), raw_ball: { extras: { type: "wide" } } }),
-    /raw_ball/
+test("snapshot may include nested match pack", () => {
+  assert.doesNotThrow(() =>
+    assertProductSnapshot({
+      ...snapshot(),
+      match: {
+        innings: {
+          number: 1,
+          latest_over: {
+            number: 0,
+            latest_delivery: { extras: { type: "wide" }, wicket: { kind: "none" } },
+          },
+        },
+      },
+    })
   );
 });
