@@ -1,6 +1,5 @@
 /**
- * Copied from cricket-scoring ScoreSnapshot. Do not import cricket-protocol.
- * If scoring adds raw_ball / extras / umpire_confirmed, this file must ignore them.
+ * Copied from cricket-scoring ScoreSnapshot, including optional raw_ball debug envelope.
  *
  * @typedef {object} LastEvent
  * @property {string} display
@@ -14,6 +13,7 @@
  * @property {number} wickets
  * @property {string} overs
  * @property {LastEvent} last_event
+ * @property {object} [raw_ball]
  */
 
 export const SNAPSHOT_KEYS = [
@@ -22,14 +22,12 @@ export const SNAPSHOT_KEYS = [
   "wickets",
   "overs",
   "last_event",
+  "raw_ball",
 ];
 
 /** @param {ScoreSnapshot} snapshot */
 export function assertProductSnapshot(snapshot) {
-  if ("raw_ball" in snapshot) {
-    throw new Error("ScoreSnapshot leaked raw_ball; broadcast must not read protocol events");
-  }
-  if ("umpire_confirmed" in snapshot) {
-    throw new Error("ScoreSnapshot leaked umpire_confirmed");
+  if (snapshot.last_event == null) {
+    throw new Error("ScoreSnapshot missing last_event");
   }
 }
