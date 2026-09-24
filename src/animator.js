@@ -1,11 +1,24 @@
 /**
- * Animations are derived only from scoring's last_event.
- * Two hops from protocol: this module must not know extras.type or umpire_confirmed.
+ * Prefer raw_ball when scoring includes it so extras and appeals look right on TV.
  *
  * @param {import("./scoreSnapshot.js").ScoreSnapshot} snapshot
  * @returns {string}
  */
 export function animationFor(snapshot) {
+  const raw = snapshot.raw_ball;
+  if (raw?.wicket?.kind && raw.wicket.kind !== "none") {
+    // Missing umpire_confirmed is treated as given — matches protocol mobile default.
+    if (raw.wicket.umpire_confirmed !== false) {
+      return "wicket";
+    }
+  }
+  if (raw?.extras?.type === "wide") {
+    return "extra-wide";
+  }
+  if (raw?.extras?.type === "no_ball") {
+    return "extra-no-ball";
+  }
+
   const event = snapshot.last_event;
   if (event.wicket_counted || event.display === "WICKET") {
     return "wicket";

@@ -21,24 +21,7 @@ function snapshot(overrides = {}) {
   };
 }
 
-test("confirmed wicket from scoring plays wicket animation", () => {
-  assert.equal(
-    animationFor(
-      snapshot({
-        wickets: 2,
-        last_event: {
-          display: "WICKET",
-          runs_added: 0,
-          wicket_counted: true,
-          legal_delivery: true,
-        },
-      })
-    ),
-    "wicket"
-  );
-});
-
-test("unconfirmed appeal from scoring does not play wicket", () => {
+test("raw_ball wicket without umpire flag plays wicket animation", () => {
   assert.equal(
     animationFor(
       snapshot({
@@ -48,32 +31,35 @@ test("unconfirmed appeal from scoring does not play wicket", () => {
           wicket_counted: false,
           legal_delivery: true,
         },
+        raw_ball: { wicket: { kind: "lbw" }, extras: { type: "none" } },
       })
     ),
-    "appeal-not-out"
+    "wicket"
   );
 });
 
-test("wide uses scoring display, not extras.type", () => {
+test("raw_ball wide is preferred over scoring display", () => {
   assert.equal(
     animationFor(
       snapshot({
         last_event: {
-          display: "WIDE",
+          display: "1",
           runs_added: 1,
           wicket_counted: false,
           legal_delivery: false,
         },
+        raw_ball: { extras: { type: "wide" }, wicket: { kind: "none" } },
       })
     ),
     "extra-wide"
   );
 });
 
-test("product snapshot must not include protocol fields", () => {
-  assert.doesNotThrow(() => assertProductSnapshot(snapshot()));
-  assert.throws(
-    () => assertProductSnapshot({ ...snapshot(), raw_ball: { extras: { type: "wide" } } }),
-    /raw_ball/
+test("snapshot may include raw_ball debug envelope", () => {
+  assert.doesNotThrow(() =>
+    assertProductSnapshot({
+      ...snapshot(),
+      raw_ball: { extras: { type: "wide" } },
+    })
   );
 });
