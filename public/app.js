@@ -2,6 +2,12 @@ const scoringOrigin = localStorage.getItem("scoringOrigin") || "http://127.0.0.1
 const matchId = localStorage.getItem("matchId") || "m1";
 
 function animationFor(snapshot) {
+  const delivery = snapshot.match?.innings?.latest_over?.latest_delivery;
+  if (delivery?.wicket?.kind && delivery.wicket.kind !== "none") {
+    if (delivery.wicket.umpire_confirmed !== false) return "wicket";
+  }
+  if (delivery?.extras?.type === "wide") return "extra-wide";
+  if (delivery?.extras?.type === "no_ball") return "extra-no-ball";
   const event = snapshot.last_event;
   if (event.wicket_counted || event.display === "WICKET") return "wicket";
   if (event.display === "NOT_OUT") return "appeal-not-out";
@@ -20,9 +26,6 @@ async function tick() {
     return;
   }
   const snapshot = await response.json();
-  if ("raw_ball" in snapshot) {
-    console.warn("scoring leaked raw_ball; ignoring protocol fields");
-  }
   const animation = animationFor(snapshot);
   document.getElementById("score").textContent =
     `${snapshot.runs}/${snapshot.wickets} (${snapshot.overs})`;
